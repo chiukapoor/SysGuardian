@@ -15,6 +15,7 @@ const (
 	Error   = "Error"
 )
 
+// Result is a struct containing Component, Name, Status and Info
 type Result struct {
 	Component string
 	Name      string
@@ -22,6 +23,7 @@ type Result struct {
 	Info      string
 }
 
+// Check interface requires the GetAll() function which return a list of Result struct to be implemented
 type Check interface {
 	GetAll() []Result
 }
@@ -35,6 +37,7 @@ type listOfChecks struct {
 	fn        checkFunc
 }
 
+// runCommand executes the list of string and return a space trimmed output
 func runCommand(cmdList ...string) (string, error) {
 	cmd := exec.Command(cmdList[0], cmdList[1:]...)
 	output, err := cmd.Output()
@@ -45,8 +48,8 @@ func runCommand(cmdList ...string) (string, error) {
 	return usage, nil
 }
 
-// GetStatus returns the Status based on the status name
-func GetStatus(statusName string) string {
+// getStatus returns the Status based on the status name
+func getStatus(statusName string) string {
 	switch statusName {
 	case OK:
 		return color.GreenString("OK")

@@ -6,13 +6,15 @@ import (
 	"strings"
 )
 
-type MemoryCheck struct{}
+type memoryCheck struct{}
 
+// CheckMemory initializes and returns a new instance of the memoryCheck struct which implements the Check interface.
+// It provides a standardized way to run these checks through the health check framework.
 func CheckMemory() Check {
-	return &MemoryCheck{}
+	return &memoryCheck{}
 }
 
-func (m *MemoryCheck) GetAll() []Result {
+func (m *memoryCheck) GetAll() []Result {
 	checks := []listOfChecks{
 		{"Memory", "RAM Usage", m.getMemoryUsage},
 		{"Memory", "Swap Usage", m.getSwapUsage},
@@ -22,10 +24,10 @@ func (m *MemoryCheck) GetAll() []Result {
 	return runChecks(checks)
 }
 
-func (m *MemoryCheck) getMemoryUsage(componentName string, checkName string) Result {
+func (m *memoryCheck) getMemoryUsage(componentName string, checkName string) Result {
 	output, err := runCommand("free")
 	if err != nil {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: err.Error()}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: err.Error()}
 	}
 
 	// Parse the output of the 'free' command
@@ -42,23 +44,23 @@ func (m *MemoryCheck) getMemoryUsage(componentName string, checkName string) Res
 
 	// If we didn't find the "Mem:" line, return an error
 	if memLine == "" {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: "Mem line not found"}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: "Mem line not found"}
 	}
 
 	// Extract the total and available memory from the second line (the 'Mem:' line)
 	fields := strings.Fields(memLine)
 	if len(fields) < 7 {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: "Unexpected output format"}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: "Unexpected output format"}
 	}
 
 	totalMemory, err := strconv.ParseFloat(fields[1], 64)
 	if err != nil {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: "Error parsing total memory"}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: "Error parsing total memory"}
 	}
 
 	availableMemory, err := strconv.ParseFloat(fields[6], 64)
 	if err != nil {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: "Error parsing available memory"}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: "Error parsing available memory"}
 	}
 
 	// Calculate memory usage percentage
@@ -66,20 +68,20 @@ func (m *MemoryCheck) getMemoryUsage(componentName string, checkName string) Res
 	usagePercentage := (usedMemory / totalMemory) * 100
 
 	// Determine the status based on the usage percentage
-	status := GetStatus("OK")
+	status := getStatus("OK")
 	if usagePercentage > 90 {
-		status = GetStatus("Error")
+		status = getStatus("Error")
 	} else if usagePercentage > 75 {
-		status = GetStatus("Warning")
+		status = getStatus("Warning")
 	}
 
 	return Result{Component: componentName, Name: checkName, Status: status, Info: fmt.Sprintf("Usage: %.2f%%", usagePercentage)}
 }
 
-func (m *MemoryCheck) getSwapUsage(componentName string, checkName string) Result {
+func (m *memoryCheck) getSwapUsage(componentName string, checkName string) Result {
 	output, err := runCommand("free")
 	if err != nil {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: err.Error()}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: err.Error()}
 	}
 
 	// Parse the output of the 'free' command
@@ -97,23 +99,23 @@ func (m *MemoryCheck) getSwapUsage(componentName string, checkName string) Resul
 
 	// If we didn't find the "Swap:" line, return an error
 	if swapLine == "" {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: "Mem line not found"}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: "Mem line not found"}
 	}
 
 	// Extract the total and available memory from the second line (the 'Swap:' line)
 	fields := strings.Fields(swapLine)
 	if len(fields) < 3 {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: "Unexpected output format"}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: "Unexpected output format"}
 	}
 
 	totalMemory, err := strconv.ParseFloat(fields[1], 64)
 	if err != nil {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: "Error parsing total memory"}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: "Error parsing total memory"}
 	}
 
 	availableMemory, err := strconv.ParseFloat(fields[3], 64)
 	if err != nil {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: "Error parsing available memory"}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: "Error parsing available memory"}
 	}
 
 	// Calculate memory usage percentage
@@ -121,55 +123,55 @@ func (m *MemoryCheck) getSwapUsage(componentName string, checkName string) Resul
 	usagePercentage := (usedMemory / totalMemory) * 100
 
 	// Determine the status based on the usage percentage
-	status := GetStatus("OK")
+	status := getStatus("OK")
 	if usagePercentage > 90 {
-		status = GetStatus("Error")
+		status = getStatus("Error")
 	} else if usagePercentage > 75 {
-		status = GetStatus("Warning")
+		status = getStatus("Warning")
 	}
 
 	return Result{Component: componentName, Name: checkName, Status: status, Info: fmt.Sprintf("Usage: %.2f%%", usagePercentage)}
 }
 
-func (m *MemoryCheck) getMemoryPressure(componentName string, checkName string) Result {
+func (m *memoryCheck) getMemoryPressure(componentName string, checkName string) Result {
 	output, err := runCommand("cat", "/proc/pressure/memory")
 	if err != nil {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: err.Error()}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: err.Error()}
 	}
 
 	lines := strings.Split(string(output), "\n")
 	if len(lines) < 1 {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: "Unexpected output format"}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: "Unexpected output format"}
 	}
 
 	// The "some" line provides information about memory pressure
 	someLine := strings.Fields(lines[0])
 	if len(someLine) < 2 {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: "Error parsing memory pressure"}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: "Error parsing memory pressure"}
 	}
 
 	pressureValue, err := strconv.ParseFloat(strings.Split(someLine[1], "=")[1], 64)
 
 	if err != nil {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: fmt.Sprintf("Error parsing memory pressure: %s", err.Error())}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: fmt.Sprintf("Error parsing memory pressure: %s", err.Error())}
 	}
 
 	// Determine the status based on the pressure value
-	status := GetStatus("OK")
+	status := getStatus("OK")
 	if pressureValue > 20 {
-		status = GetStatus("Warning")
+		status = getStatus("Warning")
 	}
 	if pressureValue > 40 {
-		status = GetStatus("Error")
+		status = getStatus("Error")
 	}
 
 	return Result{Component: componentName, Name: checkName, Status: status, Info: fmt.Sprintf("Memory Pressure: %.2f%%", pressureValue)}
 }
 
-func (m *MemoryCheck) getOOMEvents(componentName string, checkName string) Result {
+func (m *memoryCheck) getOOMEvents(componentName string, checkName string) Result {
 	output, err := runCommand("dmesg", "-T")
 	if err != nil && err.Error() != "exit status 1" {
-		return Result{Component: componentName, Name: checkName, Status: GetStatus("Error"), Info: err.Error()}
+		return Result{Component: componentName, Name: checkName, Status: getStatus("Error"), Info: err.Error()}
 	}
 
 	lines := strings.Split(string(output), "\n")
@@ -183,9 +185,9 @@ func (m *MemoryCheck) getOOMEvents(componentName string, checkName string) Resul
 	// Count the number of OOM events
 	oomCount := len(filteredLines)
 
-	status := GetStatus("OK")
+	status := getStatus("OK")
 	if oomCount > 0 {
-		status = GetStatus("Error")
+		status = getStatus("Error")
 	}
 
 	return Result{Component: componentName, Name: checkName, Status: status, Info: fmt.Sprintf("OOM Events: %d", oomCount)}
